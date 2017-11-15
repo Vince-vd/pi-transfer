@@ -3,7 +3,7 @@ from roboclaw import Roboclaw
 from interruptingcow import timeout
 import logging, sys
 from datetime import datetime
-
+import os
 
 
 '''
@@ -32,8 +32,15 @@ each list element is another list of the form [time,curent,power] where current 
 '''
 def printSaveCurrent(testNum, testVolt, readings):
 
+    # open csv file where current readings will be saved.
+    # TODO: Better coding would be to make this a try statement and check if the file can actually be opened
+    logging.debug('creating file in directory ' + str(directory))
+    fName = 'test %s.csv' % (str(testNum))
+    f = open(directory + '/' + fName,'w')
+    f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
     #for each reading in the list readings print a line to the csv file to save that reading's info
     logging.debug("saving current readings")
+
     for reading in readings:
         readTime  = reading[0]
         curr1 = str(reading[1]/100.0)
@@ -44,6 +51,8 @@ def printSaveCurrent(testNum, testVolt, readings):
         ## Uncomment print for debugging print
         #print 'Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2)
     logging.debug("saving done")
+    f.close()
+    logging.debug("file closed")
 
 '''
 This function runs the motors forward for a given amount of time in seconds at a given voltage in volts.
@@ -122,8 +131,10 @@ address = 0x80
 leadTime = 3 # time to sample current before and after test
 cooldown = 5 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
+numTests = 9000
 ###################################################################################
-
+# TODO: create directory per test
+# TODO: one csv file per test
 
 # Read voltage, value can be used to calculate the power needed for each voltage setting
 # Throw error if Voltage is lower than highest voltage in voltage list
@@ -136,15 +147,17 @@ if VS < minVolt:
     sys.exit()
 power = 0.0   #global power value to use when saving current readings
 
+#Create directory for current test, used to save
+startTime = datetime.now()
+startTime = startTime.replace(microsecond=0)
+dirName = "test " + str(startTime)
+directory = "~/Documents/roboclaw-test/" + dirName
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
-# open csv file where current readings will be saved.
-# TODO: Better coding would be to make this a try statement and check if the file can actually be opened
-fName = 'currentData.csv'
-f = open(fName,'w')
-f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
 
-i=0
-while(i < 9 ):
+i=1
+while(i < (numTests + 1) ):
 
     # run at all voltages for 0.10s
     logging.debug("running tests for 0.10s")
@@ -155,7 +168,7 @@ while(i < 9 ):
     # run at all voltages for 0.5s
     logging.debug("running tests for 0.50s")
     for voltage in desiredVolt:
-        testRun(i,voltage,1.5)
+        testRun(i,voltage,0.5)
         i+=1
 
     # run at all voltages for 1.5s
@@ -167,4 +180,4 @@ while(i < 9 ):
 # close file after test is done
 f.close()
 logging.debug("test completed, file closed")
-logging.info("Test completed succesfully, test results can be found in the file " + fName)
+logging.info("Test completed succesfully, test results can be found in the following location: " + directory)
