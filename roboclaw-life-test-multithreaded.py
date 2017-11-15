@@ -8,7 +8,7 @@ import random
 
 q = Queue.Queue()
 
-maxVolt = 0
+maxVolt = 0.0
 leadTime = 2
 restTime = 5                   # resttime in seconds
 power = 0                       # global power value to use when saving current readings
@@ -130,8 +130,9 @@ It saves voltage, current and time during the operatoin and rests 60 seconds aft
 '''
 def testRun(volt, runTime):
 
-    power = (volt/maxVolt) * 127
+    power = (volt/maxVolt) * 127.0
     power = int(round(power))
+    logging.debug('power before safety check: ' + str(power))
     # Make sure power setting doesn't exceed 127 or go below 0
     if power > 127:
         power = 127
@@ -190,35 +191,35 @@ if __name__ == '__main__':
     i = 0
     while(i < 9 ):
 
-        testRun(22, 0.1)
+        testRun(6.0, 0.1)
         i+=1
         logging.debug('ran test ' + str(i))
-        #testRun(28, 0.1)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
-        #testRun(33, 0.1)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
+        testRun(9.0, 0.1)
+        i+=1
+        logging.debug('ran test ' + str(i))
+        testRun(12.0, 0.1)
+        i+=1
+        logging.debug('ran test ' + str(i))
 
-        testRun(22, 0.5)
+        testRun(6.0, 0.5)
         i+=1
         logging.debug('ran test ' + str(i))
-        #testRun(28, 0.5)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
-        #testRun(33, 0.5)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
+        testRun(9.0, 0.5)
+        i+=1
+        logging.debug('ran test ' + str(i))
+        testRun(12.0, 0.5)
+        i+=1
+        logging.debug('ran test ' + str(i))
 
-        testRun(22, 1)
+        testRun(6.0, 1.5)
         i+=1
         logging.debug('ran test ' + str(i))
-        #testRun(28, 1)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
-        #testRun(33, 1)
-        #i+=1
-        #logging.debug('ran test ' + str(i))
+        testRun(9.0, 1.5)
+        i+=1
+        logging.debug('ran test ' + str(i))
+        testRun(12.0, 1.5)
+        i+=1
+        logging.debug('ran test ' + str(i))
 
 
     # stop and join producer when loop ends
