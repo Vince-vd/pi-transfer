@@ -143,12 +143,17 @@ def testRun(volt, runTime):
     # Wait for a chosen amount of time, gather current data before test starts as a reference
     time.sleep(leadTime)
     # Run motors forward
-    rc.ForwardM1(address,power)	#1/4 power forward
-    rc.ForwardM2(address,power)	#1/4 power forward
+    m1Write = rc.ForwardM1(address,power)	#1/4 power forward
+    m2Write = rc.ForwardM2(address,power)	#1/4 power forward
+    logging.debug('starting m1 write result = ' + str(m1Write))
+    logging.debug('starting m2 write result = ' + str(m2Write))
     # wait for chosen amount of time before turning of the motors again
     time.sleep(runTime)
-    rc.ForwardM1(address,0)
-    rc.ForwardM2(address,0)
+    m1Write = rc.ForwardM1(address,0)
+    m2Write = rc.ForwardM2(address,0)
+    logging.debug('stopping m1 write result = ' + str(m1Write))
+    logging.debug('stopping m2 write result = ' + str(m2Write))
+
     # Again wait for chosen amount of time to gather current after turning motors of to use as reference
     time.sleep(leadTime)
 
