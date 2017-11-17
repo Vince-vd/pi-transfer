@@ -34,9 +34,9 @@ def printSaveCurrent(testNum, testVolt, readings):
 
     # open csv file where current readings will be saved.
     # TODO: Better coding would be to make this a try statement and check if the file can actually be opened
-    logging.debug('creating file in directory ' + str(directory))
-    fName = 'test %s.csv' % (str(testNum))
-    f = open(directory + '/' + fName,'w')
+    logging.debug('creating file in directory ' + str(filePath))
+    fName = 'test-%s.csv' % (str(testNum))
+    f = open(filePath + fName,'w')
     f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
     #for each reading in the list readings print a line to the csv file to save that reading's info
     logging.debug("saving current readings")
@@ -49,7 +49,7 @@ def printSaveCurrent(testNum, testVolt, readings):
         f.write('%s,%s,%s,%s,%s\n' % (readTime,str(testNum),str(testVolt),curr1,curr2) )
 
         ## Uncomment print for debugging print
-        #print 'Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2)
+        #logging.debug('Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2))
     logging.debug("saving done")
     f.close()
     logging.debug("file closed")
@@ -131,7 +131,7 @@ address = 0x80
 leadTime = 3 # time to sample current before and after test
 cooldown = 5 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
-numTests = 9000
+numTests = 9
 ###################################################################################
 # TODO: create directory per test
 # TODO: one csv file per test
@@ -147,11 +147,14 @@ if VS < minVolt:
     sys.exit()
 power = 0.0   #global power value to use when saving current readings
 
-#Create directory for current test, used to save
+#Create directory for current test, used to save all the csv file for this test.
 startTime = datetime.now()
 startTime = startTime.replace(microsecond=0)
-dirName = "test " + str(startTime)
-directory = "~/Documents/roboclaw-test/" + dirName
+dirName = "test-" + str(startTime)
+filePath = "/tests/" + dirName + "/"
+directory = os.path.dirname(filePath)
+
+# Check if test directory already exists (it shouldn't) and create it if it doesn't.
 if not os.path.exists(directory):
     os.makedirs(directory)
 
@@ -177,7 +180,5 @@ while(i < (numTests + 1) ):
         testRun(i,voltage,1.5)
         i+=1
 
-# close file after test is done
-f.close()
 logging.debug("test completed, file closed")
 logging.info("Test completed succesfully, test results can be found in the following location: " + directory)
