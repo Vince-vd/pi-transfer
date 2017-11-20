@@ -131,7 +131,7 @@ address = 0x80
 leadTime = 3 # time to sample current before and after test
 cooldown = 5 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
-numTests = 9000
+numTests = 9
 ###################################################################################
 # TODO: create directory per test
 # TODO: one csv file per test
