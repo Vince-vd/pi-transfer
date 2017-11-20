@@ -33,7 +33,7 @@ each list element is another list of the form [time,curent,power] where current 
 def printSaveCurrent(testNum, testVolt, readings):
 
     # open csv file where current readings will be saved.
-    # TODO: Better coding would be to make this a try statement and check if the file can actually be opened
+    # TODO: Better coding would be to make this a try statement and check if the file can actually be opened/created
     logging.debug('creating file in directory ' + str(filePath))
     fName = 'test-%s.csv' % (str(testNum))
     f = open(filePath + fName,'w')
@@ -108,22 +108,12 @@ def testRun(testNum, volt, testTime):
 
 
 
+
+
+
 '''
 MAIN PROGRAM
 '''
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)         # enable logging
-
-#Windows comport name
-#rc = Roboclaw("COM9",115200)
-#Linux comport name'''
-rc = Roboclaw("/dev/ttyACM0",115200)
-
-rc.Open()
-
-address = 0x80
-
-
 #############################################
 #           TO BE SET BY TESTER             #
 #############################################
@@ -133,25 +123,36 @@ cooldown = 5 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
 numTests = 9
 ###################################################################################
-# TODO: create directory per test
-# TODO: one csv file per test
+
+# Enable logging, choose logging level
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+#Windows comport name
+#rc = Roboclaw("COM9",115200)
+#Linux comport name'''
+rc = Roboclaw("/dev/ttyACM0",115200)
+
+rc.Open()
+address = 0x80
 
 # Read voltage, value can be used to calculate the power needed for each voltage setting
-# Throw error if Voltage is lower than highest voltage in voltage list
 minVolt = max(desiredVolt)  # store minimum required voltage
 readVolt = rc.ReadMainBatteryVoltage(address)
 VS = readVolt[1]/10.0
+
+# Don't continue if Voltage is lower than highest voltage in voltage list
 if VS < minVolt:
     logging.error("Supply voltage is too low, must be at least %s please increase voltage and rerun test." % (minVolt))
     logging.debug("exiting program early due to low supply voltage")
     sys.exit()
+
 power = 0.0   #global power value to use when saving current readings
 
 #Create directory for current test, used to save all the csv file for this test.
 startTime = datetime.now()
 startTime = startTime.replace(microsecond=0)
 dirName = "test-" + str(startTime)
-filePath = "/tests/" + dirName + "/"
+filePath = "./tests/" + dirName + "/"
 directory = os.path.dirname(filePath)
 
 # Check if test directory already exists (it shouldn't) and create it if it doesn't.
@@ -160,6 +161,8 @@ if not os.path.exists(directory):
 
 
 i=1
+
+# Run this loop for the amount of tests we want to execute. Limit is numTests + 1 because we start with i=1 instead of 0
 while(i < (numTests + 1) ):
 
     # run at all voltages for 0.10s
