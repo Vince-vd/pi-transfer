@@ -55,7 +55,7 @@ def printSaveCurrent(testNum, testVolt, readings):
         f.close()
         logging.debug("file closed")
     # Catch code interruption (ctr + c cominbation on linux). Make sure file is closed and motors aren't running anymore before exiting
-    catch KeyboardInterrupt:
+    except KeyboardInterrupt:
         logging.info("Program interrupted by user. Shutting down and closing csv for test " + str(testNum))
         rc.ForwardM1(address,0)
         rc.ForwardM2(address,0)
@@ -67,7 +67,7 @@ It saves voltage, current and time during the operatoin and rests 60 seconds aft
 '''
 def testRun(testNum, volt, testTime):
     # recheck voltage, make sure it's still high enough
-    VS = getVS
+    VS = getVS()
     if VS < minVolt:
         logging.info("Test paused, supply voltage is too low, must be at least %s. \n Please increase input voltage to resume." % (str(minVolt)))
         logging.debug("Voltage is " + str(VS))
@@ -113,7 +113,7 @@ def testRun(testNum, volt, testTime):
     logging.info('completed %s tests' % (testNum))
 
 
-def getVS()
+def getVS():
     readVolt = rc.ReadMainBatteryVoltage(address)
     voltage = readVolt[1]/10.0*calVolt
     return voltage
@@ -129,13 +129,13 @@ MAIN PROGRAM
 #           TO BE SET BY TESTER             #
 #############################################
 ##################################################################################
-leadTime = 3 # time to sample current before and after test in seconds
-cooldown = 5 # cooldown time in seconds
+leadTime = 1 # time to sample current before and after test in seconds
+cooldown = 1 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
-numTests = 9000
-calVolt = 0 # Voltage will be multiplied by this value before saving.
-calCurr1 = 0 # Current will be multiplied by this value before saving.
-calCurr2 = 0 # Current will be multiplied by this value before saving.
+numTests = 20
+calVolt = 1 # Voltage will be multiplied by this value before saving.
+calCurr1 = 1 # Current will be multiplied by this value before saving.
+calCurr2 = 1 # Current will be multiplied by this value before saving.
 ###################################################################################
 
 # Enable logging, choose logging level
@@ -200,7 +200,7 @@ try:
     logging.debug("test completed, file closed")
     logging.info("Test completed succesfully, test results can be found in the following location: " + directory)
 # Catch code interruption (ctr + c cominbation on linux). Make sure motors aren't running anymore before exiting
-catch KeyboardInterrupt:
+except KeyboardInterrupt:
     logging.info("Program interrupted by user. Shutting down and stopping motors")
     rc.ForwardM1(address,0)
     rc.ForwardM2(address,0)
