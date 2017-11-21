@@ -36,23 +36,30 @@ def printSaveCurrent(testNum, testVolt, readings):
     # TODO: Better coding would be to make this a try statement and check if the file can actually be opened/created
     logging.debug('creating file in directory ' + str(filePath))
     fName = 'test-%s.csv' % (str(testNum))
-    f = open(filePath + fName,'w')
-    f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
-    #for each reading in the list readings print a line to the csv file to save that reading's info
-    logging.debug("saving current readings")
+    try:
+        f = open(filePath + fName,'w')
+        f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
+        #for each reading in the list readings print a line to the csv file to save that reading's info
+        logging.debug("saving current readings")
 
-    for reading in readings:
-        readTime  = reading[0]
-        curr1 = str(reading[1]/100.0)
-        curr2 = str(reading[2]/100.0)
-        # write readings to new line in csv file
-        f.write('%s,%s,%s,%s,%s\n' % (readTime,str(testNum),str(testVolt),curr1,curr2) )
+        for reading in readings:
+            readTime  = reading[0]
+            curr1 = str((reading[1]/100.0)*calCurr1) # Save M1 current in amps instead of milliamps and calibrate
+            curr2 = str((reading[2]/100.0)*calCurr2) # Save M2 current in amps instead of milliamps and calibrate
+            # write readings to new line in csv file
+            f.write('%s,%s,%s,%s,%s\n' % (readTime,str(testNum),str(testVolt),curr1,curr2) )
 
-        ## Uncomment print for debugging print
-        #logging.debug('Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2))
-    logging.debug("saving done")
-    f.close()
-    logging.debug("file closed")
+            ## Uncomment print for debugging print
+            #logging.debug('Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2))
+        logging.debug("saving done")
+        f.close()
+        logging.debug("file closed")
+    # Catch code interruption (ctr + c cominbation on linux). Make sure file is closed and motors aren't running anymore before exiting
+    catch KeyboardInterrupt:
+        logging.info("Program interrupted by user. Shutting down and closing csv for test " + str(testNum))
+        rc.ForwardM1(address,0)
+        rc.ForwardM2(address,0)
+        sys.exit(0)
 
 '''
 This function runs the motors forward for a given amount of time in seconds at a given voltage in volts.
@@ -60,8 +67,7 @@ It saves voltage, current and time during the operatoin and rests 60 seconds aft
 '''
 def testRun(testNum, volt, testTime):
     # recheck voltage, make sure it's still high enough
-    readVolt = rc.ReadMainBatteryVoltage(address)
-    VS = readVolt[1]/10.0
+    VS = getVS
     if VS < minVolt:
         logging.info("Test paused, supply voltage is too low, must be at least %s. \n Please increase input voltage to resume." % (str(minVolt)))
         logging.debug("Voltage is " + str(VS))
@@ -69,7 +75,7 @@ def testRun(testNum, volt, testTime):
         while VS < minVolt:
             time.sleep(1)
             readVolt = rc.ReadMainBatteryVoltage(address)
-            VS = readVolt[1]/10.0
+            VS = getVS
         logging.info("Input voltage sufficient, test is resuming")
         logging.debug("Input voltage is " + str(VS))
 
@@ -107,6 +113,11 @@ def testRun(testNum, volt, testTime):
     logging.info('completed %s tests' % (testNum))
 
 
+def getVS()
+    readVolt = rc.ReadMainBatteryVoltage(address)
+    voltage = readVolt[1]/10.0*calVolt
+    return voltage
+
 
 
 
@@ -118,10 +129,13 @@ MAIN PROGRAM
 #           TO BE SET BY TESTER             #
 #############################################
 ##################################################################################
-leadTime = 3 # time to sample current before and after test
+leadTime = 3 # time to sample current before and after test in seconds
 cooldown = 5 # cooldown time in seconds
 desiredVolt = [6,9,12] # list of voltages to use for test
-numTests = 9
+numTests = 9000
+calVolt = 0 # Voltage will be multiplied by this value before saving.
+calCurr1 = 0 # Current will be multiplied by this value before saving.
+calCurr2 = 0 # Current will be multiplied by this value before saving.
 ###################################################################################
 
 # Enable logging, choose logging level
@@ -137,8 +151,7 @@ address = 0x80
 
 # Read voltage, value can be used to calculate the power needed for each voltage setting
 minVolt = max(desiredVolt)  # store minimum required voltage
-readVolt = rc.ReadMainBatteryVoltage(address)
-VS = readVolt[1]/10.0
+VS = getVS()
 
 # Don't continue if Voltage is lower than highest voltage in voltage list
 if VS < minVolt:
@@ -162,26 +175,38 @@ if not os.path.exists(directory):
 
 i=1
 
-# Run this loop for the amount of tests we want to execute. Limit is numTests + 1 because we start with i=1 instead of 0
-while(i < (numTests + 1) ):
+try:
+    # Run this loop for the amount of tests we want to execute. Limit is numTests + 1 because we start with i=1 instead of 0
+    while(i < (numTests + 1) ):
 
-    # run at all voltages for 0.10s
-    logging.debug("running tests for 0.10s")
-    for voltage in desiredVolt:
-        testRun(i,voltage,0.10)
-        i+=1
+        # run at all voltages for 0.10s
+        logging.debug("running tests for 0.10s")
+        for voltage in desiredVolt:
+            testRun(i,voltage,0.10)
+            i+=1
 
-    # run at all voltages for 0.5s
-    logging.debug("running tests for 0.50s")
-    for voltage in desiredVolt:
-        testRun(i,voltage,0.5)
-        i+=1
+        # run at all voltages for 0.5s
+        logging.debug("running tests for 0.50s")
+        for voltage in desiredVolt:
+            testRun(i,voltage,0.5)
+            i+=1
 
-    # run at all voltages for 1.5s
-    logging.debug("running tests for 1.50s")
-    for voltage in desiredVolt:
-        testRun(i,voltage,1.5)
-        i+=1
+        # run at all voltages for 1.5s
+        logging.debug("running tests for 1.50s")
+        for voltage in desiredVolt:
+            testRun(i,voltage,1.5)
+            i+=1
 
-logging.debug("test completed, file closed")
-logging.info("Test completed succesfully, test results can be found in the following location: " + directory)
+    logging.debug("test completed, file closed")
+    logging.info("Test completed succesfully, test results can be found in the following location: " + directory)
+# Catch code interruption (ctr + c cominbation on linux). Make sure motors aren't running anymore before exiting
+catch KeyboardInterrupt:
+    logging.info("Program interrupted by user. Shutting down and stopping motors")
+    rc.ForwardM1(address,0)
+    rc.ForwardM2(address,0)
+    sys.exit(0)
+
+
+
+# TODO: catch keyboard interrupt
+# TODO: add integration of calibration values for voltage and current
