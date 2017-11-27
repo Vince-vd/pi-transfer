@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import time
 from roboclaw import Roboclaw
 from interruptingcow import timeout
@@ -107,7 +109,7 @@ def testRun(testNum, volt, testTime):
     # Extend current list of readings with list returned by the sampleCurrent function
     readings.extend(sampleCurrent(leadTime))
     # save current readings and cooldown
-    printSaveCurrent(testNum,volt,readings)
+    printSaveCurrent(testNum,VS,readings)
     time.sleep(cooldown)
 
     logging.info('completed %s tests' % (testNum))
@@ -130,12 +132,12 @@ MAIN PROGRAM
 #############################################
 ##################################################################################
 leadTime = 1 # time to sample current before and after test in seconds
-cooldown = 1 # cooldown time in seconds
-desiredVolt = [6,9,12] # list of voltages to use for test
-numTests = 20
-calVolt = 1 # Voltage will be multiplied by this value before saving.
-calCurr1 = 1 # Current will be multiplied by this value before saving.
-calCurr2 = 1 # Current will be multiplied by this value before saving.
+cooldown = 5 # cooldown time in seconds
+desiredVolt = [22,28,33] # list of voltages to use for test
+numTests = 9000
+calVolt = 1.0 # Voltage will be multiplied by this value before saving.
+calCurr1 = 1  # Current will be multiplied by this value before saving.
+calCurr2 = 1  # Current will be multiplied by this value before saving.
 ###################################################################################
 
 # Enable logging, choose logging level
