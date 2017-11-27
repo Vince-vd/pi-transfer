@@ -119,7 +119,7 @@ def testRun(testNum, volt, testTime):
 
 def getVS():
     readVolt = rc.ReadMainBatteryVoltage(address)
-    voltage = readVolt[1]/10.0*calVolt
+    voltage = (readVolt[1]/10.0)*calVolt
     return voltage
 
 
@@ -134,10 +134,10 @@ MAIN PROGRAM
 #############################################
 ##################################################################################
 leadTime = 1 # time to sample current before and after test in seconds
-cooldown = 5 # cooldown time in seconds
+cooldown = 10 # cooldown time in seconds
 desiredVolt = [22,28,33] # list of voltages to use for test
 numTests = 9000
-calVolt = 1.0 # Voltage will be multiplied by this value before saving.
+calVolt = 1.009583 # Voltage will be multiplied by this value before saving.
 calCurr1 = 1  # Current will be multiplied by this value before saving.
 calCurr2 = 1  # Current will be multiplied by this value before saving.
 ###################################################################################
@@ -186,19 +186,19 @@ try:
         # run at all voltages for 0.10s
         logging.debug("running tests for 0.10s")
         for voltage in desiredVolt:
-            testRun(i,voltage,0.10)
+            testRun(i,voltage,3)
             i+=1
 
         # run at all voltages for 0.5s
         logging.debug("running tests for 0.50s")
         for voltage in desiredVolt:
-            testRun(i,voltage,0.5)
+            testRun(i,voltage,3)
             i+=1
 
         # run at all voltages for 1.5s
         logging.debug("running tests for 1.50s")
         for voltage in desiredVolt:
-            testRun(i,voltage,1.5)
+            testRun(i,voltage,3)
             i+=1
 
     logging.debug("test completed, file closed")
