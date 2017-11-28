@@ -33,7 +33,7 @@ Function to print current value and save
 The "readings" variable should be a list,
 each list element is another list of the form [time,curent,power] where current is the current object returned by roboclaw
 '''
-def printSaveCurrent(testNum, readings):
+def printSaveCurrent(testNum, volt, readings):
 
     # open csv file where current readings will be saved.
     # TODO: Better coding would be to make this a try statement and check if the file can actually be opened/created
@@ -41,7 +41,7 @@ def printSaveCurrent(testNum, readings):
     fName = 'test-%s.csv' % (str(testNum))
     try:
         f = open(filePath + fName,'w')
-        f.write('Time,Test,Voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
+        f.write('Time,Test,MBV [V],Set motor voltage [V],M1 Current[A],M2 Current[A]\n') # write headers to file
         #for each reading in the list readings print a line to the csv file to save that reading's info
         logging.debug("saving current readings")
 
@@ -49,9 +49,10 @@ def printSaveCurrent(testNum, readings):
             readTime  = reading[0]
             curr1 = str((reading[1]/100.0)*calCurr1) # Save M1 current in amps instead of milliamps and calibrate
             curr2 = str((reading[2]/100.0)*calCurr2) # Save M2 current in amps instead of milliamps and calibrate
-            VS = str(reading[3])
+            MBV = str(reading[3]) # main battery voltage
+            setVolt = str(volt) # voltage commanded to motor
             # write readings to new line in csv file
-            f.write('%s,%s,%s,%s,%s\n' % (readTime,str(testNum),VS,curr1,curr2) )
+            f.write('%s,%s,%s,%s,%s\n' % (readTime,str(testNum),MBV,setVolt,curr1,curr2) )
 
             ## Uncomment print for debugging print
             #logging.debug('Time: %s \n\tVoltage [V]:%s \n\tM1 Current [A]: %s \n\tM2 Current [A]:%s' % (time,power,curr1,curr2))
@@ -111,7 +112,7 @@ def testRun(testNum, volt, testTime):
     # Extend current list of readings with list returned by the sampleCurrent function
     readings.extend(sampleCurrent(leadTime))
     # save current readings and cooldown
-    printSaveCurrent(testNum,readings)
+    printSaveCurrent(testNum,volt,readings)
     time.sleep(cooldown)
 
     logging.info('completed %s tests' % (testNum))
